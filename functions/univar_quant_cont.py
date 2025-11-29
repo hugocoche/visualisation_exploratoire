@@ -349,7 +349,7 @@ def adding_vline(fig: go.Figure, annotation: str, resume: pd.Series) -> None:
                 y=1,
                 yshift=20,
                 yref="paper",
-                text=f"Min={round(resume["min"],4)}",
+                text=f"Min={round(resume['min'],4)}",
                 showarrow=False,
             )
             fig.add_annotation(
@@ -357,16 +357,16 @@ def adding_vline(fig: go.Figure, annotation: str, resume: pd.Series) -> None:
                 y=1,
                 yshift=20,
                 yref="paper",
-                text=f"Q1={round(resume["25%"],4)}",
+                text=f"Q1={round(resume['25%'],4)}",
                 showarrow=False,
             )
             fig.add_annotation(
-                x=resume["50%"],
+                x=resume['50%'],
                 y=1,
                 yshift=-20,
                 xshift=-40,
                 yref="paper",
-                text=f"Med={round(resume["50%"],4)}",
+                text=f"Med={round(resume['50%'],4)}",
                 showarrow=False,
             )
             fig.add_annotation(
@@ -375,7 +375,7 @@ def adding_vline(fig: go.Figure, annotation: str, resume: pd.Series) -> None:
                 yshift=-20,
                 xshift=40,
                 yref="paper",
-                text=f"Mean={round(resume["mean"],4)}",
+                text=f"Mean={round(resume['mean'],4)}",
                 showarrow=False,
             )
             fig.add_annotation(
@@ -383,7 +383,7 @@ def adding_vline(fig: go.Figure, annotation: str, resume: pd.Series) -> None:
                 y=1,
                 yshift=20,
                 yref="paper",
-                text=f"Q3={round(resume["75%"],4)}",
+                text=f"Q3={round(resume['75%'],4)}",
                 showarrow=False,
             )
             fig.add_annotation(
@@ -391,7 +391,7 @@ def adding_vline(fig: go.Figure, annotation: str, resume: pd.Series) -> None:
                 y=1,
                 yshift=20,
                 yref="paper",
-                text=f"Max={round(resume["max"],4)}",
+                text=f"Max={round(resume['max'],4)}",
                 showarrow=False,
             )
 
