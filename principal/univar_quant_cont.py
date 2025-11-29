@@ -1,6 +1,5 @@
 import pandas as pd
 import numpy as np
-from skimpy import skim
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import plotly.io as pio
@@ -8,26 +7,33 @@ import dash
 from sklearn.neighbors import KernelDensity
 from typing import Literal
 from dash import dcc, html, Input, Output
+
 pio.renderers.default = "notebook"
 
-def variation_coeff(series:pd.Series)->float:
-    return round(series.std()/series.mean(),4)
 
-def yule_coeff(series:pd.Series)->float:
-    Q3=series.quantile(0.75)
-    Q2=series.quantile(0.5)
-    Q1=series.quantile(0.25)
-    return round(((Q3-Q2) - (Q2-Q1))/((Q3-Q2)+(Q2-Q1)), 4)
+def variation_coeff(series: pd.Series) -> float:
+    return round(series.std() / series.mean(), 4)
 
-def tukey_outlier(series:pd.Series, threshold:float=1.5)->pd.DataFrame:
-    Q3=series.quantile(0.75)
-    Q1=series.quantile(0.25)
-    iqr=Q3-Q1
-    lower_bound=Q1-threshold*iqr
-    upper_bound=Q3+threshold*iqr
-    temp_data=pd.DataFrame(series)
-    temp_data["bool_col"]=series.apply(lambda row: True if lower_bound<=row<=upper_bound else False)
+
+def yule_coeff(series: pd.Series) -> float:
+    Q3 = series.quantile(0.75)
+    Q2 = series.quantile(0.5)
+    Q1 = series.quantile(0.25)
+    return round(((Q3 - Q2) - (Q2 - Q1)) / ((Q3 - Q2) + (Q2 - Q1)), 4)
+
+
+def tukey_outlier(series: pd.Series, threshold: float = 1.5) -> pd.DataFrame:
+    Q3 = series.quantile(0.75)
+    Q1 = series.quantile(0.25)
+    iqr = Q3 - Q1
+    lower_bound = Q1 - threshold * iqr
+    upper_bound = Q3 + threshold * iqr
+    temp_data = pd.DataFrame(series)
+    temp_data["bool_col"] = series.apply(
+        lambda row: True if lower_bound <= row <= upper_bound else False
+    )
     return temp_data[temp_data["bool_col"]]
+
 
 def init_app(
     data: pd.DataFrame,
@@ -450,8 +456,6 @@ def quantitative_analysis(
     Veiller à intégrer un dataframe qui ne contient que des colonnes de type quantitatifs continus
     """
 
-    skim(data)
-
     app = init_app(
         data=data,
         title=title,
@@ -564,7 +568,11 @@ def quantitative_analysis(
         fig.update_yaxes(
             row=1,
             col=1,
-            title="Fréquence" if histnorm=="probability" else "Densité" if histnorm=="density" else "Effectif",
+            title="Fréquence"
+            if histnorm == "probability"
+            else "Densité"
+            if histnorm == "density"
+            else "Effectif",
             showticklabels=False,
             zeroline=True,
             zerolinecolor="rgba(0,0,0,0.5)",
