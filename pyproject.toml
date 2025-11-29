@@ -3,7 +3,7 @@ name = "visualisation-exploratoire"
 version = "0.1.0"
 description = "Cette librairie a pour but de préparer des visualisations toutes faites afin de gagner du temps lors des analyses exploratoires"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.11"
 dependencies = [
     "dash>=3.3.0",
     "nbformat>=5.10.4",
