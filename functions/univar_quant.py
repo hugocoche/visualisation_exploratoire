@@ -7,37 +7,14 @@ import dash
 from sklearn.neighbors import KernelDensity
 from typing import Literal
 from dash import dcc, html, Input, Output
+from useful_functions import tukey_outlier, variation_coeff, yule_coeff, nice_range
 
 pio.renderers.default = "notebook"
 
 
-def variation_coeff(series: pd.Series) -> float:
-    return round(series.std() / series.mean(), 4)
-
-
-def yule_coeff(series: pd.Series) -> float:
-    Q3 = series.quantile(0.75)
-    Q2 = series.quantile(0.5)
-    Q1 = series.quantile(0.25)
-    return round(((Q3 - Q2) - (Q2 - Q1)) / ((Q3 - Q2) + (Q2 - Q1)), 4)
-
-
-def tukey_outlier(series: pd.Series, threshold: float = 1.5) -> pd.DataFrame:
-    Q3 = series.quantile(0.75)
-    Q1 = series.quantile(0.25)
-    iqr = Q3 - Q1
-    lower_bound = Q1 - threshold * iqr
-    upper_bound = Q3 + threshold * iqr
-    temp_data = pd.DataFrame(series)
-    temp_data["bool_col"] = series.apply(
-        lambda row: True if lower_bound <= row <= upper_bound else False
-    )
-    return temp_data[temp_data["bool_col"]]
-
-
-def init_app(
+def _init_app(
     data: pd.DataFrame,
-    title: str = "Analyse visuelle des variables continues",
+    title: str = "Analyse visuelle des variables quantitatives",
     height: str = "auto",
     width: str = "100%",
     margin: str = "auto",
@@ -45,13 +22,11 @@ def init_app(
     gap: str = "20px",
 ) -> dash.Dash:
     """
-    Initialise l'application Dash pour l'analyse des variables continues avec un design amélioré,
-    sans sliders, en utilisant des inputs numériques classiques.
+    Initialise l'application Dash pour l'analyse des variables quantitatives avec un design amélioré,
     """
 
     app = dash.Dash(__name__)
 
-    # Couleurs harmonieuses
     bg_color = "#f9f9f9"
     card_bg = "#ffffff"
     control_label_color = "#333333"
@@ -74,7 +49,6 @@ def init_app(
                     "color": "#222222",
                 },
             ),
-            # Conteneur des contrôles dans une "card"
             html.Div(
                 style={
                     "display": "flex",
@@ -86,7 +60,6 @@ def init_app(
                     "box-shadow": "0 4px 8px rgba(0,0,0,0.1)",
                 },
                 children=[
-                    # Variable
                     html.Div(
                         [
                             html.Label(
@@ -108,7 +81,6 @@ def init_app(
                         ],
                         style={"flex": "1", "min-width": "180px"},
                     ),
-                    # Annotation
                     html.Div(
                         [
                             html.Label(
@@ -131,7 +103,6 @@ def init_app(
                         ],
                         style={"flex": "1", "min-width": "180px"},
                     ),
-                    # Nombre de bins
                     html.Div(
                         [
                             html.Label(
@@ -158,7 +129,6 @@ def init_app(
                         ],
                         style={"flex": "1", "min-width": "150px"},
                     ),
-                    # Précision des bornes
                     html.Div(
                         [
                             html.Label(
@@ -185,7 +155,6 @@ def init_app(
                         ],
                         style={"flex": "1", "min-width": "150px"},
                     ),
-                    # Outliers
                     html.Div(
                         [
                             html.Label(
@@ -208,7 +177,6 @@ def init_app(
                         ],
                         style={"flex": "1", "min-width": "180px"},
                     ),
-                    # Normalisation de l'histogramme
                     html.Div(
                         [
                             html.Label(
@@ -236,7 +204,6 @@ def init_app(
                         ],
                         style={"flex": "1", "min-width": "180px"},
                     ),
-                    # KDE kernel
                     html.Div(
                         [
                             html.Label(
@@ -269,7 +236,6 @@ def init_app(
                 ],
             ),
             html.Br(),
-            # Graphique
             html.Div(
                 [
                     dcc.Graph(
@@ -284,7 +250,6 @@ def init_app(
                 ]
             ),
             html.Br(),
-            # Statistiques
             html.Div(
                 id="stats-output",
                 style={
@@ -300,13 +265,6 @@ def init_app(
     )
 
     return app
-
-
-def nice_range(series: pd.Series, precision: int) -> tuple[float, float]:
-    """Retourne min et max arrondis à la précision souhaitée"""
-    min_val = np.floor(series.min() * 10**precision) / 10**precision
-    max_val = np.ceil(series.max() * 10**precision) / 10**precision
-    return min_val, max_val
 
 
 def adding_vline(fig: go.Figure, annotation: str, resume: pd.Series) -> None:
@@ -361,7 +319,7 @@ def adding_vline(fig: go.Figure, annotation: str, resume: pd.Series) -> None:
                 showarrow=False,
             )
             fig.add_annotation(
-                x=resume['50%'],
+                x=resume["50%"],
                 y=1,
                 yshift=-20,
                 xshift=-40,
@@ -413,6 +371,9 @@ def adding_kde(
     x_kde: int,
     bin_size: float,
 ):
+    """
+    Permet l'affichage d'une courbe kde
+    """
     kde = KernelDensity(kernel=kernel, bandwidth=0.1).fit(series.values.reshape(-1, 1))
     x_d = np.linspace(min_val, max_val, x_kde)
     log_dens = kde.score_samples(x_d.reshape(-1, 1))
@@ -437,12 +398,12 @@ def adding_kde(
         showlegend=False,
         hoverinfo="skip",
     )
-    fig.add_trace(trace_kde, row=1, col=1)  # ajouter la KD
+    fig.add_trace(trace_kde, row=1, col=1)
 
 
 def quantitative_analysis(
     data: pd.DataFrame,
-    title: str = "Analyse visuelle des variables continues",
+    title: str = "Analyse visuelle des quantitative",
     height: str = "400px",
     width: str = "100%",
     margin: str = "auto",
@@ -453,10 +414,10 @@ def quantitative_analysis(
     x_kde: int = 50,
 ):
     """Permet d'effectuer une représentation synthétique des variables quantitatives
-    Veiller à intégrer un dataframe qui ne contient que des colonnes de type quantitatifs continus
+    Veiller à intégrer un dataframe qui ne contient que des colonnes de type quantitatif
     """
 
-    app = init_app(
+    app = _init_app(
         data=data,
         title=title,
         height=height,
@@ -495,7 +456,8 @@ def quantitative_analysis(
         if tukey:
             series = data[variable]
         else:
-            series = tukey_outlier(data[variable], threshold=1.5)[variable]
+            data_with_bool_tukey = tukey_outlier(data[variable], threshold=1.5)
+            series = data_with_bool_tukey[data_with_bool_tukey["bool_col"]][variable]
 
         resume = series.describe()
         min_val, max_val = nice_range(series, precision=precision)
